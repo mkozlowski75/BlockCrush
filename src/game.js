@@ -27,8 +27,11 @@ const PREVIEW_BLOCK_SIZE = BLOCK_SIZE;
 const GRID_ORIGIN_X = (GAME_WIDTH - GRID_SIZE * BLOCK_SIZE) / 2;
 const GRID_ORIGIN_Y = 60;
 const TRAY_TOP = 460;
+const HIGH_SCORE_STORAGE_KEY = 'blockcrush-highscore';
 let score = 0;
+let bestScore = 0;
 let scoreText;
+let bestScoreText;
 let grid = [];
 let shapes = [];
 let draggingShape = null;
@@ -43,7 +46,9 @@ function preload() {
 
 function create() {
   score = 0;
+  bestScore = loadHighScore();
   scoreText = this.add.text(10, 10, 'Score: 0', { font: '20px Arial', fill: '#fff' });
+  bestScoreText = this.add.text(GAME_WIDTH - 10, 10, 'Highscore: ' + bestScore, { font: '20px Arial', fill: '#fff' }).setOrigin(1, 0);
   // Create grid
   grid = [];
   for (let row = 0; row < GRID_SIZE; row++) {
@@ -208,7 +213,7 @@ function tryPlaceShape(scene, shape) {
   // Check for line clears
   checkLineClears(scene);
   score += def.flat().filter(Boolean).length * 10;
-  scoreText.setText('Score: ' + score);
+  updateScoreUi();
   return true;
 }
 
@@ -245,6 +250,33 @@ function checkLineClears(scene) {
 
 function update() {
   // No animation for prototype
+}
+
+function updateScoreUi() {
+  scoreText.setText('Score: ' + score);
+  if (score > bestScore) {
+    bestScore = score;
+    saveHighScore(bestScore);
+  }
+  bestScoreText.setText('Highscore: ' + bestScore);
+}
+
+function loadHighScore() {
+  try {
+    const raw = localStorage.getItem(HIGH_SCORE_STORAGE_KEY);
+    const value = Number.parseInt(raw || '0', 10);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+function saveHighScore(value) {
+  try {
+    localStorage.setItem(HIGH_SCORE_STORAGE_KEY, String(value));
+  } catch (error) {
+    // Ignore storage errors (private mode / quota) and keep gameplay running.
+  }
 }
 
 new Phaser.Game(config);
