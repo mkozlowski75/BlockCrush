@@ -19,6 +19,17 @@ To create a production build:
 npm run build
 ```
 
+## Deploy to Vercel
+
+1. Login (one time):
+   ```
+   npx vercel login
+   ```
+2. Deploy production:
+   ```
+   npx vercel --prod
+   ```
+
 ## Project Structure
 - `src/` — Game source code
 - `public/` — Static assets and HTML
