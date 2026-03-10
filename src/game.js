@@ -1,11 +1,18 @@
 import Phaser from 'phaser';
 
+const GAME_WIDTH = 400;
+const GAME_HEIGHT = 620;
+
 const config = {
   type: Phaser.AUTO,
-  width: 400,
-  height: 620,
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
   backgroundColor: '#222',
   parent: 'game',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   scene: {
     preload,
     create,
@@ -17,7 +24,7 @@ const config = {
 const GRID_SIZE = 9;
 const BLOCK_SIZE = 40;
 const PREVIEW_BLOCK_SIZE = BLOCK_SIZE;
-const GRID_ORIGIN_X = 20;
+const GRID_ORIGIN_X = (GAME_WIDTH - GRID_SIZE * BLOCK_SIZE) / 2;
 const GRID_ORIGIN_Y = 60;
 const TRAY_TOP = 460;
 let score = 0;
@@ -114,7 +121,7 @@ function generateShapes(scene) {
   }
 
   const marginX = 16;
-  const availableWidth = config.width - marginX * 2;
+  const availableWidth = GAME_WIDTH - marginX * 2;
   const widths = defs.map((def) => getShapeCols(def) * PREVIEW_BLOCK_SIZE);
   const totalWidth = widths.reduce((sum, w) => sum + w, 0);
   const gap = defs.length > 1 ? Math.max(0, (availableWidth - totalWidth) / (defs.length - 1)) : 0;
@@ -126,7 +133,7 @@ function generateShapes(scene) {
     const shapeRows = def.length;
     const shapeWidth = shapeCols * PREVIEW_BLOCK_SIZE;
     const shapeHeight = shapeRows * PREVIEW_BLOCK_SIZE;
-    const y = TRAY_TOP + Math.max(0, (config.height - TRAY_TOP - shapeHeight) / 2);
+    const y = TRAY_TOP + Math.max(0, (GAME_HEIGHT - TRAY_TOP - shapeHeight) / 2);
     const shape = createShape(scene, def, x, y, PREVIEW_BLOCK_SIZE);
     shapes.push(shape);
     x += shapeWidth + gap;
