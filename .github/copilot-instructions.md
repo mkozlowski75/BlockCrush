@@ -1,0 +1,14 @@
+- [x] Clarify Project Requirements
+	- Project type: Phaser game, playable prototype, web/desktop support.
+- [x] Scaffold the Project
+	- Created directories, config files, and initial source code for BlockCrush.
+- [x] Customize the Project
+	- Implemented a clickable block grid with scoring in Phaser.
+- [x] Install Required Extensions
+	- No additional VS Code extensions required.
+- [x] Compile the Project
+	- Installed dependencies and verified successful build and run.
+- [ ] Create and Run Task
+- [ ] Launch the Project
+- [x] Ensure Documentation is Complete
+	- README.md and copilot-instructions.md are up to date with instructions and project details.
