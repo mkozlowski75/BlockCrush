@@ -37,6 +37,7 @@ let shapes = [];
 let draggingShape = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let isClearing = false;
 
 
 function preload() {
@@ -71,6 +72,8 @@ function create() {
 
   // Manual pointer drag for reliable behavior on container children.
   this.input.on('pointerdown', (pointer, gameObjects) => {
+    if (isClearing) return;
+
     const hit = gameObjects.find((o) => o.isShapeBlock) || gameObjects.find((o) => o.isShape);
     if (!hit) return;
 
@@ -87,6 +90,11 @@ function create() {
   });
 
   this.input.on('pointerup', () => {
+    if (isClearing) {
+      draggingShape = null;
+      return;
+    }
+
     if (!draggingShape) return;
 
     if (tryPlaceShape(this, draggingShape)) {
@@ -218,16 +226,15 @@ function tryPlaceShape(scene, shape) {
 }
 
 function checkLineClears(scene) {
+  const linesCleared = [];
+
   // Check rows
   for (let row = 0; row < GRID_SIZE; row++) {
     if (grid[row].every(cell => cell.filled)) {
-      for (let col = 0; col < GRID_SIZE; col++) {
-        grid[row][col].filled = false;
-        grid[row][col].setFillStyle(0x8d6748, 0.25);
-      }
-      score += 90;
+      linesCleared.push({ type: 'row', index: row });
     }
   }
+
   // Check columns
   for (let col = 0; col < GRID_SIZE; col++) {
     let full = true;
@@ -238,13 +245,61 @@ function checkLineClears(scene) {
       }
     }
     if (full) {
-      for (let row = 0; row < GRID_SIZE; row++) {
-        grid[row][col].filled = false;
-        grid[row][col].setFillStyle(0x8d6748, 0.25);
-      }
-      score += 90;
+      linesCleared.push({ type: 'col', index: col });
     }
   }
+
+  if (linesCleared.length === 0) {
+    return;
+  }
+
+  // Collect unique cells for animation when row+column clears overlap.
+  const cellsToClear = [];
+  const seen = new Set();
+
+  for (const line of linesCleared) {
+    if (line.type === 'row') {
+      for (let col = 0; col < GRID_SIZE; col++) {
+        const key = `${line.index}:${col}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cellsToClear.push(grid[line.index][col]);
+        }
+      }
+    } else {
+      for (let row = 0; row < GRID_SIZE; row++) {
+        const key = `${row}:${line.index}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          cellsToClear.push(grid[row][line.index]);
+        }
+      }
+    }
+  }
+
+  score += linesCleared.length * 90;
+  isClearing = true;
+  spawnClearParticles(scene, cellsToClear);
+  playClearSound(scene);
+
+  scene.tweens.add({
+    targets: cellsToClear,
+    alpha: 0.2,
+    scaleX: 0.82,
+    scaleY: 0.82,
+    yoyo: true,
+    repeat: 1,
+    duration: 110,
+    onComplete: () => {
+      for (const cell of cellsToClear) {
+        cell.filled = false;
+        cell.setFillStyle(0x8d6748, 0.25);
+        cell.setAlpha(1);
+        cell.setScale(1);
+      }
+      isClearing = false;
+    }
+  });
 }
 
 
@@ -276,6 +331,53 @@ function saveHighScore(value) {
     localStorage.setItem(HIGH_SCORE_STORAGE_KEY, String(value));
   } catch (error) {
     // Ignore storage errors (private mode / quota) and keep gameplay running.
+  }
+}
+
+function spawnClearParticles(scene, cells) {
+  for (const cell of cells) {
+    for (let i = 0; i < 2; i++) {
+      const p = scene.add.circle(cell.x, cell.y, 3, 0xf3d2a2, 0.95);
+      p.setDepth(20);
+
+      const targetX = cell.x + Phaser.Math.Between(-20, 20);
+      const targetY = cell.y + Phaser.Math.Between(-20, 20);
+
+      scene.tweens.add({
+        targets: p,
+        x: targetX,
+        y: targetY,
+        alpha: 0,
+        scale: 0.2,
+        duration: 220,
+        ease: 'Sine.easeOut',
+        onComplete: () => p.destroy(),
+      });
+    }
+  }
+}
+
+function playClearSound(scene) {
+  try {
+    const audioContext = scene.sound.context;
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const gain = audioContext.createGain();
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.07, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+    gain.connect(audioContext.destination);
+
+    const osc = audioContext.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(620, now);
+    osc.frequency.exponentialRampToValueAtTime(780, now + 0.11);
+    osc.connect(gain);
+    osc.start(now);
+    osc.stop(now + 0.17);
+  } catch (error) {
+    // Audio is optional and may be blocked by browser policies.
   }
 }
 
