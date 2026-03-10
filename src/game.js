@@ -25,9 +25,10 @@ const GRID_SIZE = 9;
 const BLOCK_SIZE = 40;
 const PREVIEW_BLOCK_SIZE = BLOCK_SIZE;
 const GRID_ORIGIN_X = (GAME_WIDTH - GRID_SIZE * BLOCK_SIZE) / 2;
-const GRID_ORIGIN_Y = 60;
+const GRID_ORIGIN_Y = 78;
 const TRAY_TOP = 460;
 const HIGH_SCORE_STORAGE_KEY = 'blockcrush-highscore';
+const TITLE_TEXT = '💖💖💖 Blockcrush dla Karolinki 💖💖💖';
 let score = 0;
 let bestScore = 0;
 let scoreText;
@@ -48,8 +49,9 @@ function preload() {
 function create() {
   score = 0;
   bestScore = loadHighScore();
-  scoreText = this.add.text(10, 10, 'Score: 0', { font: '20px Arial', fill: '#fff' });
-  bestScoreText = this.add.text(GAME_WIDTH - 10, 10, 'Highscore: ' + bestScore, { font: '20px Arial', fill: '#fff' }).setOrigin(1, 0);
+  this.add.text(GAME_WIDTH / 2, 10, TITLE_TEXT, { font: '20px Arial', fill: '#ffb6d9' }).setOrigin(0.5, 0);
+  scoreText = this.add.text(10, 42, 'Score: 0', { font: '20px Arial', fill: '#fff' });
+  bestScoreText = this.add.text(GAME_WIDTH - 10, 42, 'Highscore: ' + bestScore, { font: '20px Arial', fill: '#fff' }).setOrigin(1, 0);
   // Create grid
   grid = [];
   for (let row = 0; row < GRID_SIZE; row++) {
